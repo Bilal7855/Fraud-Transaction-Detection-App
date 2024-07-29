@@ -1,16 +1,35 @@
 import streamlit as st
 import pandas as pd
-import joblib
+import pickle  # Use pickle instead of joblib
 import numpy as np
 import base64
+import os
 
-# Load your RandomForestClassifier model
-model = joblib.load('m.pkl')  # Replace 'm.pkl' with your model path
+# Function to load the model using pickle
+def load_model(model_path):
+    try:
+        with open(model_path, 'rb') as model_file:
+            model = pickle.load(model_file)
+        return model
+    except FileNotFoundError:
+        st.error("Model file not found. Please check the file path.")
+        return None
+    except Exception as e:
+        st.error(f"An error occurred while loading the model: {e}")
+        return None
+
+# Load your model
+model_path = os.path.join(os.getcwd(), 'm.pkl')  # Adjust path as needed
+model = load_model(model_path)
 
 # Function to make predictions on a single observation
 def predict_fraud(time, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10,
                   v11, v12, v13, v14, v15, v16, v17, v18, v19, v20,
                   v21, v22, v23, v24, v25, v26, v27, v28, amount):
+    if model is None:
+        st.error("Model is not loaded. Please check the model file.")
+        return None, None
+
     input_data = np.array([[time, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10,
                             v11, v12, v13, v14, v15, v16, v17, v18, v19, v20,
                             v21, v22, v23, v24, v25, v26, v27, v28, amount]])
@@ -117,10 +136,10 @@ def main():
                                                             v21, v22, v23, v24, v25, v26, v27, v28, amount)
 
                     predictions.append(prediction)
-                   # probabilities.append(probability)
+                    probabilities.append(probability)
 
                 df['Prediction'] = predictions
-                #df['Probability'] = probabilities
+                df['Probability'] = probabilities
                 st.write('Predictions:')
                 st.dataframe(df)
 
